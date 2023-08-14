@@ -9,6 +9,10 @@ import imblearn
 from imblearn.over_sampling import RandomOverSampler
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+
+
 
 
 # imputer = SimpleImputer(strategy='mean')
@@ -137,20 +141,31 @@ def preprocessing():
 
 X_train, X_test, y_train, y_test = preprocessing()
 
-# Create and train the logistic regression model
-model = LogisticRegression()
-model.fit(X_train, y_train)
+param_grid = {
+    'n_estimators': [50, 100, 150],  # Number of trees in the forest
+    'max_depth': [None, 10, 20],      # Maximum depth of each tree
+    'min_samples_split': [2, 5, 10]   # Minimum samples required to split an internal node
+}
 
-# Make predictions on the test set
-y_pred = model.predict(X_test)
+# Create a RandomForestClassifier instance
+rf_model = RandomForestClassifier()
 
-# Evaluate the model
+# Create a GridSearchCV instance
+grid_search = GridSearchCV(rf_model, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+
+# Perform the grid search on your data
+grid_search.fit(X_train, y_train)
+
+# Get the best model and its parameters
+best_model = grid_search.best_estimator_
+best_params = grid_search.best_params_
+
+# Make predictions on the test set using the best model
+y_pred = best_model.predict(X_test)
+
+# Evaluate the best model's performance
 accuracy = accuracy_score(y_test, y_pred)
-conf_matrix = confusion_matrix(y_test, y_pred)
-classification_rep = classification_report(y_test, y_pred)
 
+print(f'Best Model: {best_model}')
+print(f'Best Model Parameters: {best_params}')
 print(f'Accuracy: {accuracy:.2f}')
-print('Confusion Matrix:')
-print(conf_matrix)
-print('Classification Report:')
-print(classification_rep)
